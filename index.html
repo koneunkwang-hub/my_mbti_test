@@ -3,80 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>간단한 MBTI 테스트</title>
+    <title>나만의 MBTI 성격 유형 테스트</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     <style>
-        /* 디자인 (CSS) */
+        /* [디자인 설정] */
+        :root {
+            --primary-color: #6C5CE7; /* 메인 보라색 */
+            --secondary-color: #a29bfe;
+            --bg-color: #dfe6e9;
+        }
         body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background-color: #f0f2f5;
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            min-height: 100vh;
         }
         .container {
             background-color: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 450px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             text-align: center;
-            max-width: 400px;
-            width: 100%;
+            position: relative;
+            overflow: hidden;
         }
-        h1 { color: #333; }
+        
+        /* 시작 화면 */
+        h1 { font-size: 26px; color: #333; margin-bottom: 10px; }
+        .subtitle { font-size: 16px; color: #666; margin-bottom: 30px; }
+        
+        /* 버튼 스타일 */
         .btn {
-            display: block;
             width: 100%;
-            padding: 15px;
-            margin: 10px 0;
+            padding: 16px;
+            margin-top: 15px;
             border: none;
-            border-radius: 8px;
-            background-color: #007bff;
+            border-radius: 12px;
+            background-color: var(--primary-color);
             color: white;
-            font-size: 16px;
+            font-size: 18px;
+            font-weight: bold;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: 0.3s;
         }
-        .btn:hover { background-color: #0056b3; }
+        .btn:hover { background-color: #5649c0; transform: translateY(-2px); }
+        .btn-option {
+            background-color: white;
+            color: #333;
+            border: 2px solid #eee;
+            margin-bottom: 15px;
+        }
+        .btn-option:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* 진행바 */
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* 질문 화면 */
+        #question-text {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            word-break: keep-all;
+            line-height: 1.4;
+        }
+
+        /* 결과 화면 */
+        .result-title { font-size: 18px; color: var(--primary-color); font-weight: bold; }
+        .result-type { font-size: 40px; font-weight: 800; margin: 10px 0; color: #333; }
+        .result-desc { font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 20px; word-break: keep-all;}
+        
         .hidden { display: none; }
-        #result { font-size: 24px; font-weight: bold; color: #2c3e50; }
-        .desc { font-size: 14px; color: #666; margin-top: 10px; }
+        .fade-in { animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="container fade-in">
         <div id="start-screen">
-            <h1>나의 MBTI 찾기</h1>
-            <p>간단한 질문으로 알아보는 성격 유형</p>
-            <button class="btn" onclick="startTest()">시작하기</button>
+            <h1>성격 유형 테스트</h1>
+            <p class="subtitle">나의 성향을 12가지 질문으로 알아보세요.</p>
+            <div style="font-size:50px; margin-bottom:20px;">🧐</div>
+            <button class="btn" onclick="startTest()">테스트 시작하기</button>
         </div>
 
         <div id="question-screen" class="hidden">
-            <h2 id="question-text">질문이 여기에 나옵니다</h2>
-            <button class="btn" onclick="nextQuestion(1)">그렇다</button>
-            <button class="btn" onclick="nextQuestion(-1)">아니다</button>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <h2 id="question-text">질문 내용</h2>
+            <button class="btn btn-option" onclick="nextQuestion(1)">그렇다</button>
+            <button class="btn btn-option" onclick="nextQuestion(-1)">아니다</button>
         </div>
 
         <div id="result-screen" class="hidden">
-            <h1>당신의 유형은?</h1>
-            <div id="result">ENTP</div>
-            <p class="desc" id="result-desc">결과 설명이 여기에 나옵니다.</p>
-            <button class="btn" onclick="location.reload()">다시 하기</button>
+            <p class="result-title">당신의 유형은</p>
+            <div id="result-type" class="result-type">ESTJ</div>
+            <h3 id="result-name" style="margin:0; color:#666;">엄격한 관리자</h3>
+            <div style="margin: 20px 0; border-top:1px solid #eee; border-bottom:1px solid #eee; padding: 20px 0;">
+                <p id="result-desc" class="result-desc">설명이 들어갑니다.</p>
+            </div>
+            <button class="btn" onclick="location.reload()">다시 테스트하기</button>
         </div>
     </div>
 
     <script>
-        // 로직 (JavaScript)
+        // [로직 설정]
         
-        // 질문 목록 (type: EI, SN, TF, JP / score가 양수면 앞쪽, 음수면 뒤쪽 성향)
+        // 12개 질문 (E/I, S/N, T/F, J/P 각 3개씩)
         const questions = [
-            { id: 1, text: "사람들과 어울리는 모임에서 에너지를 얻나요?", type: "EI" },
-            { id: 2, text: "현실적인 데이터보다는 미래의 가능성에 더 관심이 있나요?", type: "SN" },
-            { id: 3, text: "결정을 내릴 때 감정보다는 논리가 우선인가요?", type: "TF" },
-            { id: 4, text: "여행을 갈 때 철저하게 계획을 세우는 편인가요?", type: "JP" }
+            { id: 1, type: "EI", text: "새로운 사람들과 만나는 자리가 즐겁고 에너지가 솟나요?" },
+            { id: 2, type: "EI", text: "주말에는 집에서 쉬기보다 밖으로 나가 활동하고 싶나요?" },
+            { id: 3, type: "EI", text: "친구에게 먼저 연락하고 약속을 잡는 편인가요?" },
+            
+            { id: 4, type: "SN", text: "현실적인 문제 해결보다 미래의 가능성을 상상하는 게 좋나요?" },
+            { id: 5, type: "SN", text: "일할 때 구체적인 지침보다 전체적인 흐름을 중요시하나요?" },
+            { id: 6, type: "SN", text: "비유나 은유적인 표현을 자주 사용하는 편인가요?" },
+            
+            { id: 7, type: "TF", text: "친구가 고민을 털어놓으면 공감보다 해결책을 먼저 제시하나요?" },
+            { id: 8, type: "TF", text: "논리적 사실이 사람의 감정보다 더 중요하다고 생각하나요?" },
+            { id: 9, type: "TF", text: "공과 사는 철저히 구분해야 한다고 생각하나요?" },
+            
+            { id: 10, type: "JP", text: "여행을 갈 때 분 단위로 계획을 세우는 것을 좋아하나요?" },
+            { id: 11, type: "JP", text: "일이 계획대로 진행되지 않으면 스트레스를 많이 받나요?" },
+            { id: 12, type: "JP", text: "책상이나 방 정리가 항상 깔끔하게 되어 있나요?" }
         ];
+
+        // 16가지 성격 유형 데이터
+        const results = {
+            "ISTJ": { name: "현실주의자", desc: "책임감이 강하고 현실적이며, 매사에 철저하고 보수적인 성향을 가집니다. 한번 시작한 일은 끝까지 해내는 인내력이 있습니다." },
+            "ISFJ": { name: "용감한 수호자", desc: "차분하고 헌신적이며 타인의 감정을 잘 배려합니다. 조용하지만 관계를 중시하며 책임감이 매우 강합니다." },
+            "INFJ": { name: "통찰력 있는 선지자", desc: "사람에 대한 통찰력이 뛰어나고 영감이 풍부합니다. 이상을 추구하며 깊은 의미를 찾는 것을 좋아합니다." },
+            "INTJ": { name: "용의주도한 전략가", desc: "상상력이 풍부하고 철두철미한 계획을 세웁니다. 독립적이고 분석적이며 지식에 대한 욕구가 강합니다." },
+            "ISTP": { name: "만능 재주꾼", desc: "과묵하고 절제된 호기심으로 인생을 관찰합니다. 도구를 다루는 데 능숙하며 상황 적응력이 뛰어납니다." },
+            "ISFP": { name: "호기심 많은 예술가", desc: "말없이 다정하고 온화하며 사람들에게 친절합니다. 현재의 순간을 즐기며 자신의 공간을 중요시합니다." },
+            "INFP": { name: "열정적인 중재자", desc: "최악의 상황에서도 긍정적인 면을 보려 노력합니다. 마음이 따뜻하고 낭만적이며 내적 신념이 깊습니다." },
+            "INTP": { name: "논리적인 사색가", desc: "지적 호기심이 높고 잠재력과 가능성을 중요시합니다. 조용하고 과묵하지만 관심 분야에서는 말을 많이 합니다." },
+            "ESTP": { name: "모험을 즐기는 사업가", desc: "직설적이고 친근하며 느긋한 태도를 가집니다. 위험을 감수하는 것을 즐기며 현실적인 문제 해결에 능합니다." },
+            "ESFP": { name: "자유로운 영혼의 연예인", desc: "사교적이고 활동적이며 수용적이고 친절합니다. 주위 사람을 즐겁게 하는 것을 좋아하며 분위기 메이커 역할을 합니다." },
+            "ENFP": { name: "재기발랄한 활동가", desc: "창의적이고 활발하며 열정적입니다. 사람들과 어울리는 것을 좋아하고 상상력이 풍부하여 새로운 시도를 즐깁니다." },
+            "ENTP": { name: "뜨거운 논쟁을 즐기는 변론가", desc: "지적인 도전을 두려워하지 않는 똑똑한 호기심형입니다. 다방면에 관심이 많고 창의적인 아이디어가 넘칩니다." },
+            "ESTJ": { name: "엄격한 관리자", desc: "구체적이고 현실적이며 사실적입니다. 일을 조직하고 이끌어 나가는 지도력이 있으며 실질적인 결과를 중시합니다." },
+            "ESFJ": { name: "사교적인 외교관", desc: "동정심이 많고 다른 사람에게 관심을 쏟으며 인화를 중요시합니다. 정리 정돈을 잘하며 참을성이 많습니다." },
+            "ENFJ": { name: "정의로운 사회운동가", desc: "따뜻하고 적극적이며 책임감이 강합니다. 타인의 성장을 도모하고 협동하는 것을 좋아합니다." },
+            "ENTJ": { name: "대담한 통솔자", desc: "열정적이고 솔직하며 단호합니다. 지도력과 통솔력이 있으며 장기적인 계획과 거시적 안목을 선호합니다." }
+        };
 
         let currentStep = 0;
         let scores = { EI: 0, SN: 0, TF: 0, JP: 0 };
@@ -88,6 +181,10 @@
         }
 
         function showQuestion() {
+            // 진행바 업데이트
+            const percent = (currentStep / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+            
             if (currentStep < questions.length) {
                 document.getElementById('question-text').innerText = questions[currentStep].text;
             } else {
@@ -95,9 +192,9 @@
             }
         }
 
-        function nextQuestion(score) {
+        function nextQuestion(value) {
             const type = questions[currentStep].type;
-            scores[type] += score; // 점수 누적
+            scores[type] += value; // 긍정(+1) 또는 부정(-1)
             currentStep++;
             showQuestion();
         }
@@ -106,24 +203,18 @@
             document.getElementById('question-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.remove('hidden');
 
-            // 점수에 따라 유형 계산 (양수면 E, N, T, J / 음수면 I, S, F, P)
-            // *주의: 이 로직은 예시를 위해 단순화된 것입니다.
+            // MBTI 조합
             let mbti = "";
             mbti += scores.EI > 0 ? "E" : "I";
             mbti += scores.SN > 0 ? "N" : "S";
             mbti += scores.TF > 0 ? "T" : "F";
-            mbti += scores.JP > 0 ? "J" : "P"; // 질문이 계획적(J)이면 양수
+            mbti += scores.JP > 0 ? "J" : "P";
 
-            document.getElementById('result').innerText = mbti;
-            
-            // 간단한 유형별 설명 예시 (필요시 16개 다 추가 가능)
-            const descriptions = {
-                "ENTP": "뜨거운 논쟁을 즐기는 변론가",
-                "ISFJ": "용감한 수호자",
-                // ... 나머지는 생략됨, 기본 메시지 출력
-            };
-            
-            document.getElementById('result-desc').innerText = descriptions[mbti] || "매력적인 성격의 소유자이시군요!";
+            // 결과 매핑
+            const resultData = results[mbti];
+            document.getElementById('result-type').innerText = mbti;
+            document.getElementById('result-name').innerText = resultData.name;
+            document.getElementById('result-desc').innerText = resultData.desc;
         }
     </script>
 </body>
