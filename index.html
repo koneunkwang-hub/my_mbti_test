@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간단한 MBTI 테스트</title>
+    <style>
+        /* 디자인 (CSS) */
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 { color: #333; }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn:hover { background-color: #0056b3; }
+        .hidden { display: none; }
+        #result { font-size: 24px; font-weight: bold; color: #2c3e50; }
+        .desc { font-size: 14px; color: #666; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="start-screen">
+            <h1>나의 MBTI 찾기</h1>
+            <p>간단한 질문으로 알아보는 성격 유형</p>
+            <button class="btn" onclick="startTest()">시작하기</button>
+        </div>
+
+        <div id="question-screen" class="hidden">
+            <h2 id="question-text">질문이 여기에 나옵니다</h2>
+            <button class="btn" onclick="nextQuestion(1)">그렇다</button>
+            <button class="btn" onclick="nextQuestion(-1)">아니다</button>
+        </div>
+
+        <div id="result-screen" class="hidden">
+            <h1>당신의 유형은?</h1>
+            <div id="result">ENTP</div>
+            <p class="desc" id="result-desc">결과 설명이 여기에 나옵니다.</p>
+            <button class="btn" onclick="location.reload()">다시 하기</button>
+        </div>
+    </div>
+
+    <script>
+        // 로직 (JavaScript)
+        
+        // 질문 목록 (type: EI, SN, TF, JP / score가 양수면 앞쪽, 음수면 뒤쪽 성향)
+        const questions = [
+            { id: 1, text: "사람들과 어울리는 모임에서 에너지를 얻나요?", type: "EI" },
+            { id: 2, text: "현실적인 데이터보다는 미래의 가능성에 더 관심이 있나요?", type: "SN" },
+            { id: 3, text: "결정을 내릴 때 감정보다는 논리가 우선인가요?", type: "TF" },
+            { id: 4, text: "여행을 갈 때 철저하게 계획을 세우는 편인가요?", type: "JP" }
+        ];
+
+        let currentStep = 0;
+        let scores = { EI: 0, SN: 0, TF: 0, JP: 0 };
+
+        function startTest() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('question-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentStep < questions.length) {
+                document.getElementById('question-text').innerText = questions[currentStep].text;
+            } else {
+                showResult();
+            }
+        }
+
+        function nextQuestion(score) {
+            const type = questions[currentStep].type;
+            scores[type] += score; // 점수 누적
+            currentStep++;
+            showQuestion();
+        }
+
+        function showResult() {
+            document.getElementById('question-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            // 점수에 따라 유형 계산 (양수면 E, N, T, J / 음수면 I, S, F, P)
+            // *주의: 이 로직은 예시를 위해 단순화된 것입니다.
+            let mbti = "";
+            mbti += scores.EI > 0 ? "E" : "I";
+            mbti += scores.SN > 0 ? "N" : "S";
+            mbti += scores.TF > 0 ? "T" : "F";
+            mbti += scores.JP > 0 ? "J" : "P"; // 질문이 계획적(J)이면 양수
+
+            document.getElementById('result').innerText = mbti;
+            
+            // 간단한 유형별 설명 예시 (필요시 16개 다 추가 가능)
+            const descriptions = {
+                "ENTP": "뜨거운 논쟁을 즐기는 변론가",
+                "ISFJ": "용감한 수호자",
+                // ... 나머지는 생략됨, 기본 메시지 출력
+            };
+            
+            document.getElementById('result-desc').innerText = descriptions[mbti] || "매력적인 성격의 소유자이시군요!";
+        }
+    </script>
+</body>
+</html>
